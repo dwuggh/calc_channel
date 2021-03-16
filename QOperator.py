@@ -1,4 +1,5 @@
 import numpy as np
+from numpy import dtype
 from utils import *
 
 class QOperator(object):
@@ -16,9 +17,15 @@ class QOperator(object):
         # the following should be equivalent:
         # return 2 ** self.qubits.size
         return self.operator.shape[0]
+    
+    def print(self):
+        print("qubits: ", self.qubits)
+        print("shape:  ", self.operator.shape)
+        print(self.operator)
 
     def alter_qubits(self, qubits):
-        self.qubits = np.array(qubits)
+        qubits = np.array(qubits)
+        return QOperator(qubits, self.operator)
 
     # construct gate in the big hilbert space
     # G = I ⊗ G
@@ -44,6 +51,48 @@ class QOperator(object):
                 big_operator[i, j] = val
         return big_operator
 
+    def broadcast_with(self, qubits):
+        # qubits_new = np.fromiter((x for x in qubits if not contains(self.qubits, x)), dtype=np.int32)
+        qnum = len(qubits)
+        dim = 2 ** qnum
+        big_operator = np.zeros((dim, dim), dtype=np.complex64)
+
+        # occupied qubits of the original operator
+        # we need to respect the order of self.qubits in `qubits`
+
+        # occupy1: original qubits in parameter's order
+        # occupy1 = []
+        # for i, q in enumerate(qubits):
+        #     if contains(self.qubits, q):
+        #         occupy1.append(q)
+
+        # occupy: original qubits index in `self.qubits` of occupy1
+        occupy = []
+        for q1 in self.qubits:
+            for i, q2 in enumerate(qubits):
+                if q1 == q2:
+                    occupy.append(i)
+                    break
+
+        # self.qubits = np.array(qubits)
+        for i in range(dim):
+            for j in range(dim):
+                di = np.flip(get_bin_digits(i, qnum))
+                dj = np.flip(get_bin_digits(j, qnum))
+
+                # coordinates in the small Hilbert space
+                gi = from_bin_digits(np.flip(di[occupy]))
+                gj = from_bin_digits(np.flip(dj[occupy]))
+
+                # check for identity
+                id = 1
+                for k in range(len(di)):
+                    if id == 1 and not contains(occupy, k) and di[k] != dj[k]:
+                        id = 0
+
+                val = np.complex64(id) * self.operator[gi, gj]
+                big_operator[i, j] = val
+        return QOperator(qubits, big_operator)
     # def rearrange(self, qubits_new):
     #     pass
 
@@ -59,23 +108,30 @@ class QOperator(object):
 
         qubits_reserved = np.fromiter((x for x in self.qubits if not contains(traced_qubits, x)), np.int32)
 
-        dim_new = dim - 2 ** len(traced_qubits)
-        # for simplicity, we treat scalar as a matrix of dim (1, 1)
-        dim_new = dim_new if dim_new > 0 else 1
+        dim_new = 2 ** len(qubits_reserved)
 
         # the traced matrix
         mat_new = np.zeros((dim_new, dim_new), dtype=np.complex64)
+
+        # occupied qubits of the original operator
+        occupy_traced = []
+        occupy_reserved = []
+        for i, q in enumerate(self.qubits):
+            if contains(qubits_reserved, q):
+                occupy_reserved.append(i)
+            if contains(traced_qubits, q):
+                occupy_traced.append(i)
 
         for i in range(dim):
             for j in range(dim):
                 di = np.flip(get_bin_digits(i, qnum))
                 dj = np.flip(get_bin_digits(j, qnum))
                 
-                tr_i = from_bin_digits(np.flip(di[traced_qubits]))
-                tr_j = from_bin_digits(np.flip(dj[traced_qubits]))
+                tr_i = from_bin_digits(np.flip(di[occupy_traced]))
+                tr_j = from_bin_digits(np.flip(dj[occupy_traced]))
 
-                i_new = from_bin_digits(np.flip(di[qubits_reserved]))
-                j_new = from_bin_digits(np.flip(dj[qubits_reserved]))
+                i_new = from_bin_digits(np.flip(di[occupy_reserved]))
+                j_new = from_bin_digits(np.flip(dj[occupy_reserved]))
                 if tr_i == tr_j:
                     # print(i, j, i_new, j_new)
                     mat_new[i_new, j_new] += self.operator[i, j]
@@ -86,22 +142,24 @@ class QOperator(object):
 def multiply(lhs: QOperator, rhs: QOperator):
     q1 = lhs.qubits
     q2 = rhs.qubits
-    qmax = np.max(np.concatenate((q1, q2))) + 1
-    lhs_big = lhs.broadcast(qmax)
-    rhs_big = rhs.broadcast(qmax)
-    result_mat = np.matmul(lhs_big, rhs_big)
-    result_qubits = [i for i in range(qmax)]
-    return QOperator(result_qubits, result_mat)
+    qubits = merge(q1, q2)
+    # print(q1, q2, qubits)
+    lhs_big = lhs.broadcast_with(qubits)
+    # print("lhs", lhs.operator.trace())
+    rhs_big = rhs.broadcast_with(qubits)
+    # print("rhs", rhs.operator.trace())
+    result_mat = np.matmul(lhs_big.operator, rhs_big.operator)
+    # print("result", result_mat.trace())
+    return QOperator(qubits, result_mat)
 
 def add(lhs: QOperator, rhs: QOperator):
     q1 = lhs.qubits
     q2 = rhs.qubits
-    qmax = np.max(np.concatenate((q1, q2))) + 1
-    lhs_big = lhs.broadcast(qmax)
-    rhs_big = rhs.broadcast(qmax)
-    result_mat = lhs_big + rhs_big
-    result_qubits = [i for i in range(qmax)]
-    return QOperator(result_qubits, result_mat)
+    qubits = merge(q1, q2)
+    lhs_big = lhs.broadcast_with(qubits)
+    rhs_big = rhs.broadcast_with(qubits)
+    result_mat = lhs_big.operator + rhs_big.operator
+    return QOperator(qubits, result_mat)
 
 # the identity operator I
 def identity(qubits=[0]):

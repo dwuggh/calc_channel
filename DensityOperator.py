@@ -22,10 +22,10 @@ class DensityOperator(QOperator):
         # mat = np.outer(ground_state, ground_state)
         super().__init__(qubits, mat)
 
-    def print(self):
-        print("qubits: ", self.qubits)
-        print("shape:  ", self.operator.shape)
-        print(self.operator)
+    # def print(self):
+    #     print("qubits: ", self.qubits)
+    #     print("shape:  ", self.operator.shape)
+    #     print(self.operator)
 
     def merge(self, other):
         op = multiply(self, other)
@@ -35,9 +35,8 @@ class DensityOperator(QOperator):
     def evolution(self, unitary: QOperator, p_g = 0, on_qubits = None):
 
         # ρ = U ρ U^\dagger
-
         if on_qubits is not None:
-            unitary.alter_qubits(on_qubits)
+            unitary = unitary.alter_qubits(on_qubits)
 
         result = multiply(unitary, multiply(self, unitary.dagger()))
 
@@ -62,20 +61,20 @@ class DensityOperator(QOperator):
         return result
 
     # bell measurement: only result 00 and 11 will be reserved
-    def bell_meausure(self, q1, q2, pauli, p_m = 0):
+    def bell_measure(self, q1, q2, pauli, p_m = 0):
         channel1 = measure_x(q1) if pauli == 'x' else measure_z(q2)
         channel2 = measure_x(q1) if pauli == 'x' else measure_z(q2)
         P_00 = multiply(channel1.kraus_operators[0], channel2.kraus_operators[0])
         P_11 = multiply(channel1.kraus_operators[1], channel2.kraus_operators[1])
         # this channel will cause probability loss because of post-selection
         loss_channel = QChannel([P_00, P_11])
-        self.print()
+        # self.print()
         self.channel(loss_channel)
-        self.print()
+        # self.print()
         operator = self.partial_trace([q1, q2])
         self.operator = operator.operator
         self.qubits = operator.qubits
-        self.print()
+        # self.print()
 
 
 

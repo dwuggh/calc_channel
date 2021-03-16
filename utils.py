@@ -47,3 +47,16 @@ class ErrorModel(object):
         self.p_n = p_n
         self.p_g = p_g
         self.p_m = p_m
+
+
+def merge(l1, l2):
+    l = []
+    for i in l1:
+        if not contains(l, i):
+            l.append(i)
+
+    for i in l2:
+        if not contains(l, i):
+            l.append(i)
+    
+    return np.array(l)
