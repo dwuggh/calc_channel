@@ -4,6 +4,7 @@ from utils import *
 from QOperator import *
 from QChannel import *
 from DensityOperator import *
+from fidelity import *
 
 
     
@@ -57,28 +58,32 @@ q3    ---∎-----X-----------Z-------⊤--  -----Z--------  --M(x)
 data2 -----------------------------σ--  --------------  ------
 '''
 def nickerson_2(ρ: DensityOperator, err_model: ErrorModel, data1, data2, q1, q2, q3 ,q4, pauli, stringent_plus = True):
+
+    # for efficiency improvement
     ρ1 = bell_pair(err_model.p_n, [q1, q3])
     ρ2 = bell_pair(err_model.p_n, [q2, q4])
 
-    ρ.merge(ρ1)
-    ρ.merge(ρ2)
+    ρ1.merge(ρ2)
 
     c1 = cnot([q2, q1])
     c2 = cnot([q4, q3])
-    ρ.evolution(c1, err_model.p_g)
-    ρ.evolution(c2, err_model.p_g)
+    ρ1.evolution(c1, err_model.p_g)
+    ρ1.evolution(c2, err_model.p_g)
 
-    ρ.bell_measure(q2, q4, 'x', err_model.p_m)
+    ρ1.bell_measure(q2, q4, 'x', err_model.p_m)
 
     ρ3 = bell_pair(err_model.p_n, [q2, q4])
-    ρ.merge(ρ2)
+    ρ1.merge(ρ3)
 
     c3 = cphase([q2, q1])
     c4 = cphase([q4, q3])
-    ρ.evolution(c3, err_model.p_g)
-    ρ.evolution(c4, err_model.p_g)
+    ρ1.evolution(c3, err_model.p_g)
+    ρ1.evolution(c4, err_model.p_g)
 
-    ρ.bell_measure(q2, q4, 'x', err_model.p_m)
+    ρ1.bell_measure(q2, q4, 'x', err_model.p_m)
+
+    # now, take ρ into consideration
+    ρ.merge(ρ1)
 
     c5 = cpauli(pauli, [q1, data1])
     c6 = cpauli(pauli, [q3, data2])

@@ -1,11 +1,10 @@
 import numpy as np
-from numpy import dtype
 from utils import *
 
 class QOperator(object):
     def __init__(self, qubits, operator: np.ndarray):
         self.qubits = np.array(qubits)
-        self.operator = np.array(operator, dtype=np.complex64)
+        self.operator = np.array(operator, dtype=np.float64)
 
     def qnum(self):
         return self.qubits.size
@@ -31,7 +30,7 @@ class QOperator(object):
     # G = I ⊗ G
     def broadcast(self, qnum: int):
         dim = 2 ** qnum
-        big_operator = np.zeros((dim, dim), dtype=np.complex64)
+        big_operator = np.zeros((dim, dim), dtype=np.float64)
         for i in range(dim):
             for j in range(dim):
                 di = np.flip(get_bin_digits(i, qnum))
@@ -47,7 +46,7 @@ class QOperator(object):
                     if id == 1 and not contains(self.qubits, k) and di[k] != dj[k]:
                         id = 0
 
-                val = np.complex64(id) * self.operator[gi, gj]
+                val = np.float64(id) * self.operator[gi, gj]
                 big_operator[i, j] = val
         return big_operator
 
@@ -55,7 +54,7 @@ class QOperator(object):
         # qubits_new = np.fromiter((x for x in qubits if not contains(self.qubits, x)), dtype=np.int32)
         qnum = len(qubits)
         dim = 2 ** qnum
-        big_operator = np.zeros((dim, dim), dtype=np.complex64)
+        big_operator = np.zeros((dim, dim), dtype=np.float64)
 
         # occupied qubits of the original operator
         # we need to respect the order of self.qubits in `qubits`
@@ -90,7 +89,7 @@ class QOperator(object):
                     if id == 1 and not contains(occupy, k) and di[k] != dj[k]:
                         id = 0
 
-                val = np.complex64(id) * self.operator[gi, gj]
+                val = np.float64(id) * self.operator[gi, gj]
                 big_operator[i, j] = val
         return QOperator(qubits, big_operator)
     # def rearrange(self, qubits_new):
@@ -99,7 +98,8 @@ class QOperator(object):
     # get adjoint operator
     def dagger(self):
         t = self.operator.transpose()
-        t = t.conj()
+        # NOTE only need to transpose since σ_y is also real in our definition.
+        # t = t.conj()
         return QOperator(self.qubits, t)
 
     def partial_trace(self, traced_qubits):
@@ -111,7 +111,7 @@ class QOperator(object):
         dim_new = 2 ** len(qubits_reserved)
 
         # the traced matrix
-        mat_new = np.zeros((dim_new, dim_new), dtype=np.complex64)
+        mat_new = np.zeros((dim_new, dim_new), dtype=np.float64)
 
         # occupied qubits of the original operator
         occupy_traced = []
@@ -172,14 +172,19 @@ def pauli_0(q=0):
 def pauli_x(q = 0):
     return QOperator([q], np.array([[0, 1], [1, 0]]))
 
+# NOTE Since channels has the form of Kraus operator, global phase can be safely ignored.
 def pauli_y(q = 0):
+    return QOperator([q], np.array([[0, -1], [1, 0]]))
+
+# this is the self=-adjoint version of σ_y, which we will not use.
+def pauli_y_exact(q = 0):
     return QOperator([q], np.array([[0, 0 - 1j], [0 + 1j, 0]]))
 
 def pauli_z(q = 0):
     return QOperator([q], np.array([[1, 0], [0, -1]]))
 
 def hadamard(q = 0):
-    return QOperator([q], 2**(-0.5) * np.array([[1, 1], [1, -1]], dtype=np.complex64))
+    return QOperator([q], 2**(-0.5) * np.array([[1, 1], [1, -1]], dtype=np.float64))
 
 σ_x = pauli_x
 σ_y = pauli_y

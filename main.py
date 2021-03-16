@@ -27,15 +27,6 @@ D: 9, 10, 11
 
 
 
-# np.array([[ 0.12499996+0.j,  0.12499996+0.j,  0.12499996+0.j,
-#         -0.12499996+0.j],
-#        [ 0.        +0.j,  0.        +0.j,  0.        +0.j,
-#          0.        +0.j],
-#        [ 0.        +0.j,  0.        +0.j,  0.        +0.j,
-#          0.        +0.j],
-#        [ 0.12499996+0.j,  0.12499996+0.j,  0.12499996+0.j,
-#         -0.12499996+0.j]], dtype=np.complex64)
-
 def test_1():
     np.set_printoptions(edgeitems=16, linewidth=200,
                         # formatter=dict(float=lambda x: "%.3g" % x)
@@ -80,9 +71,9 @@ if __name__ == "__main__":
     # a = test_1()
     # test_3()
     np.set_printoptions(edgeitems=16, linewidth=200,
-                        formatter=dict(complexfloat=lambda x: "%5.6g" % x)
+                        formatter=dict(float=lambda x: "%5.6g" % x)
                         )
-    err_model = cc.ErrorModel()
-    ρ = cc.make_bell(err_model, False, False)
+    err_model = cc.ErrorModel(0.1, 0.01)
+    ρ = cc.make_bell(err_model, True, False)
     ρ.print()
     # test_2()

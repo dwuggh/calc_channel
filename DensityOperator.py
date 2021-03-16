@@ -81,17 +81,17 @@ class DensityOperator(QOperator):
 # measurement channel
 # E_0: measurement result 1, E_1: measurement result -1
 def measure_x(q = 0):
-    E_0 = 0.5 * np.array([[1, 1], [1, 1]], dtype=np.complex64)
-    E_1 = 0.5 * np.array([[1, -1], [-1, 1]], dtype=np.complex64)
+    E_0 = 0.5 * np.array([[1, 1], [1, 1]], dtype=np.float64)
+    E_1 = 0.5 * np.array([[1, -1], [-1, 1]], dtype=np.float64)
     return QChannel([QOperator([q], E_0), QOperator([q], E_1)])
 
 def measure_z(q = 0):
-    E_0 = np.array([[1, 0], [0, 0]], dtype=np.complex64)
-    E_1 = np.array([[0, 0], [0, 1]], dtype=np.complex64)
+    E_0 = np.array([[1, 0], [0, 0]], dtype=np.float64)
+    E_1 = np.array([[0, 0], [0, 1]], dtype=np.float64)
     return QChannel([QOperator([q], E_0), QOperator([q], E_1)])
 
 # generate bell pair in werner form
 def bell_pair(p_n, qubits = [0, 1]):
-    Φ = np.array([1, 0, 0, 1], dtype=np.complex64) / 2 ** 0.5
+    Φ = np.array([1, 0, 0, 1], dtype=np.float64) / 2 ** 0.5
     mat = (1 - 4 / 3 * p_n) * np.outer(Φ, Φ) + (p_n / 3) * np.identity(4)
     return DensityOperator(qubits, mat)
