@@ -1,10 +1,10 @@
 import numpy as np
 from functools import reduce
-from utils import *
-from QOperator import *
-from QChannel import *
-from DensityOperator import *
-from fidelity import *
+from .utils import *
+from .QOperator import *
+from .QChannel import *
+from .DensityOperator import *
+from .fidelity import *
 
 
     
@@ -18,10 +18,10 @@ q4    ---|-----∎--⊤--M(x)
 q3    ---∎--⊤-----Z--M(x)
 data2 ------σ------------
 '''
-def nickerson_1(ρ: DensityOperator, err_model: ErrorModel, data1, data2, q1, q2, q3 ,q4, pauli):
+def bell_purify_1(ρ: DensityOperator, err_model: ErrorModel, data1, data2, q1, q2, q3 ,q4, pauli):
     ρ1 = bell_pair(err_model.p_n, [q1, q3])
     ρ.merge(ρ1)
-    ρ.print()
+    # ρ.print()
 
     # 2 control-pauli gate
     c1 = cpauli(pauli, [q1, data1])
@@ -29,7 +29,7 @@ def nickerson_1(ρ: DensityOperator, err_model: ErrorModel, data1, data2, q1, q2
 
     ρ.evolution(c1, err_model.p_g)
     ρ.evolution(c2, err_model.p_g)
-    ρ.print()
+    # ρ.print()
 
     ρ2 = bell_pair(err_model.p_n, [q2, q4])
     ρ.merge(ρ2)
@@ -48,7 +48,7 @@ def nickerson_1(ρ: DensityOperator, err_model: ErrorModel, data1, data2, q1, q2
 
 '''
 q1, q2, q3, q4 are the 4 ancilla qubits
-`stringent_plus` indicates whether the blank-separated region is performed
+`stringent` indicates whether the blank-separated region is performed
 q2    ------∎--⊤--M(x)--∎--⊤--M(x)----  --∎--⊤--M(x)--  ------
 q1    ---∎--|--X--------|--Z-------⊤--  --|--Z--------  --M(x)
 data1 ---|--|-----------|----------σ--  --|-----------  ------
@@ -57,7 +57,7 @@ q4    ---|--∎--⊤--M(x)--∎--⊤--M(x)----  --∎--⊤--M(x)--  ------
 q3    ---∎-----X-----------Z-------⊤--  -----Z--------  --M(x)
 data2 -----------------------------σ--  --------------  ------
 '''
-def nickerson_2(ρ: DensityOperator, err_model: ErrorModel, data1, data2, q1, q2, q3 ,q4, pauli, stringent_plus = True):
+def bell_purify_2(ρ: DensityOperator, err_model: ErrorModel, data1, data2, q1, q2, q3 ,q4, pauli, stringent = True):
 
     # for efficiency improvement
     ρ1 = bell_pair(err_model.p_n, [q1, q3])
@@ -90,7 +90,7 @@ def nickerson_2(ρ: DensityOperator, err_model: ErrorModel, data1, data2, q1, q2
     ρ.evolution(c5, err_model.p_g)
     ρ.evolution(c6, err_model.p_g)
 
-    if stringent_plus:
+    if stringent:
         ρ4 = bell_pair(err_model.p_n, [q2, q4])
         ρ.merge(ρ4)
 
@@ -106,17 +106,22 @@ def nickerson_2(ρ: DensityOperator, err_model: ErrorModel, data1, data2, q1, q2
     ρ.bell_measure(q1, q3, 'x', err_model.p_m)
 
 '''
+qubit indexing:
 2  5
 1  4
 0  3
 '''
 def make_bell(err_model: ErrorModel, stringent = True, stringent_plus = True):
     ρ = bell_pair(err_model.p_n, [0, 3])
-    nickerson_1(ρ, err_model, 0, 3, 1, 2, 4, 5, 'z')
-    nickerson_1(ρ, err_model, 0, 3, 1, 2, 4, 5, 'x')
+    bell_purify_1(ρ, err_model, 0, 3, 1, 2, 4, 5, 'z')
+    print(bell_fidelity(ρ))
+    bell_purify_1(ρ, err_model, 0, 3, 1, 2, 4, 5, 'x')
+    print(bell_fidelity(ρ))
     if stringent:
-        nickerson_2(ρ, err_model, 0, 3, 1, 2, 4, 5, 'z', stringent_plus)
-        nickerson_2(ρ, err_model, 0, 3, 1, 2, 4, 5, 'x', stringent_plus)
+        bell_purify_2(ρ, err_model, 0, 3, 1, 2, 4, 5, 'z', stringent)
+        print(bell_fidelity(ρ))
+        bell_purify_2(ρ, err_model, 0, 3, 1, 2, 4, 5, 'x', stringent)
+        print(bell_fidelity(ρ))
 
     return ρ
 

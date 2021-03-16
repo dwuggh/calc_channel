@@ -1,8 +1,8 @@
 import numpy as np
 from functools import reduce
-from utils import *
-from QOperator import *
-from QChannel import *
+from .utils import *
+from .QOperator import *
+from .QChannel import *
 
 
 class DensityOperator(QOperator):
@@ -61,20 +61,31 @@ class DensityOperator(QOperator):
         return result
 
     # bell measurement: only result 00 and 11 will be reserved
+    '''
+    In the paper, measurement error is modeled by perfect measurement preceded by
+    inversion of the state with probability $p_m$.
+    '''
     def bell_measure(self, q1, q2, pauli, p_m = 0):
         channel1 = measure_x(q1) if pauli == 'x' else measure_z(q2)
         channel2 = measure_x(q1) if pauli == 'x' else measure_z(q2)
+        # the 4 projection operator
         P_00 = multiply(channel1.kraus_operators[0], channel2.kraus_operators[0])
+        P_01 = multiply(channel1.kraus_operators[0], channel2.kraus_operators[1])
+        P_10 = multiply(channel1.kraus_operators[1], channel2.kraus_operators[0])
         P_11 = multiply(channel1.kraus_operators[1], channel2.kraus_operators[1])
+
+        p1 = (1 - p_m) ** 2 + p_m ** 2
+        p2 = 2 * p_m * (1 - p_m)
+
+        p1 = np.sqrt(p1)
+        p2 = np.sqrt(p2)
+
         # this channel will cause probability loss because of post-selection
-        loss_channel = QChannel([P_00, P_11])
-        # self.print()
+        loss_channel = QChannel([P_00.scale_to(p1), P_01.scale_to(p2), P_10.scale_to(p2), P_11.scale_to(p1)])
         self.channel(loss_channel)
-        # self.print()
         operator = self.partial_trace([q1, q2])
         self.operator = operator.operator
         self.qubits = operator.qubits
-        # self.print()
 
 
 

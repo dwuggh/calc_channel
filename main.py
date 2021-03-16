@@ -1,5 +1,3 @@
-from QOperator import pauli
-from utils import ErrorModel
 import calc_channel as cc
 import numpy as np
 
@@ -28,9 +26,6 @@ D: 9, 10, 11
 
 
 def test_1():
-    np.set_printoptions(edgeitems=16, linewidth=200,
-                        # formatter=dict(float=lambda x: "%.3g" % x)
-                        )
     err_model = cc.ErrorModel()
     ρ1 = cc.bell_pair(err_model.p_n, [1, 3])
     ρ2 = cc.bell_pair(err_model.p_n, [2, 4])
@@ -71,9 +66,12 @@ if __name__ == "__main__":
     # a = test_1()
     # test_3()
     np.set_printoptions(edgeitems=16, linewidth=200,
-                        formatter=dict(float=lambda x: "%5.6g" % x)
+                        formatter=dict(float=lambda x: "%6.4g" % x)
                         )
-    err_model = cc.ErrorModel(0.1, 0.01)
-    ρ = cc.make_bell(err_model, True, False)
-    ρ.print()
-    # test_2()
+    perfect_bell = cc.bell_pair(0, [0, 1])
+    err_model = cc.ErrorModel(0.1, 0.005, 0.005)
+    noise_bell = cc.bell_pair(err_model.p_n, [0, 1])
+    print("no purification:   ", cc.entanglement_fidelity(perfect_bell, noise_bell))
+
+    ρ = cc.make_bell(err_model, False, False)
+    print("with purification: ", cc.entanglement_fidelity(perfect_bell, ρ))

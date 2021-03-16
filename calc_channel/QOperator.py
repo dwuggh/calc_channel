@@ -1,5 +1,5 @@
 import numpy as np
-from utils import *
+from .utils import *
 
 class QOperator(object):
     def __init__(self, qubits, operator: np.ndarray):
@@ -25,6 +25,11 @@ class QOperator(object):
     def alter_qubits(self, qubits):
         qubits = np.array(qubits)
         return QOperator(qubits, self.operator)
+
+    # scale this operator by a scalar.
+    def scale_to(self, scalar):
+        operator = self.operator * scalar
+        return QOperator(self.qubits, operator)
 
     # construct gate in the big hilbert space
     # G = I ⊗ G

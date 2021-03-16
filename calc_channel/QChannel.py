@@ -1,7 +1,7 @@
 import numpy as np
 from functools import reduce
-from utils import *
-from QOperator import *
+from .utils import *
+from .QOperator import *
 
 
 class QChannel(object):
@@ -23,6 +23,13 @@ class QChannel(object):
         #     op = op.broadcast(qnum)
         
 
+'''
+depolarizing channel for $n$ qubits
+
+$$
+ε(ρ) = (1 - p)ρ + \\frac{ρ}{4^n - 1} \sum (⊗ A_i) ρ (⊗ A_i^\dagger)
+$$
+'''
 def depolarizing_channel(p, qubits = [0]) -> QChannel:
     operators = []
     qnum = len(qubits)
@@ -32,7 +39,7 @@ def depolarizing_channel(p, qubits = [0]) -> QChannel:
     operators.append(QOperator(qubits, E_0))
     # 4 ** qnum - 1 other operators
     for i in range(4 ** qnum):
-        # i = 0 is just the identity operator, which has already been considered above
+        # the i = 0 case is just I, which has already been considered above
         if i == 0:
             continue
         indices = np.flip(get_n_digits(i, 4, qnum))
