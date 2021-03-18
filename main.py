@@ -8,7 +8,7 @@ if __name__ == "__main__":
                         formatter=dict(float=lambda x: "%6.4g" % x)
                         )
     perfect_bell = cc.bell_pair(0, [0, 1])
-    err_model = cc.ErrorModel(0.1, 0.005, 0.005)
+    err_model = cc.ErrorModel(0.05, 0.005, 0.005)
     noise_bell = cc.bell_pair(err_model.p_n, [0, 1])
     print("no purification:   ", cc.entanglement_fidelity(perfect_bell, noise_bell))
 

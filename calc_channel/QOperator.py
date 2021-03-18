@@ -27,7 +27,7 @@ class QOperator(object):
         return QOperator(qubits, self.operator)
 
     # scale this operator by a scalar.
-    def scale_to(self, scalar):
+    def scale(self, scalar):
         operator = self.operator * scalar
         return QOperator(self.qubits, operator)
 
@@ -141,6 +141,64 @@ class QOperator(object):
                     # print(i, j, i_new, j_new)
                     mat_new[i_new, j_new] += self.operator[i, j]
         return QOperator(qubits_reserved, mat_new)
+
+    '''
+    extract qubits at given basis('x' or 'z')
+    '''
+    def extract(self, qubit, basis, target):
+        # get index of qubit
+        index = -1
+        for (i, q) in enumerate(self.qubits):
+            if q == qubit:
+                index = i
+                break
+
+        qnum = self.qnum()
+        qubits_new = np.delete(self.qubits, index)
+        dim, _ = self.operator.shape
+        # get sub matrices of |0><0| and |1><1| (Z basis)
+        dim_new = 2 ** (qnum - 1)
+        mat_00 = np.zeros((dim_new, dim_new), dtype=np.float64)
+        mat_01 = np.zeros((dim_new, dim_new), dtype=np.float64)
+        mat_10 = np.zeros((dim_new, dim_new), dtype=np.float64)
+        mat_11 = np.zeros((dim_new, dim_new), dtype=np.float64)
+        for i in range(dim):
+            for j in range(dim):
+                di = np.flip(get_bin_digits(i, qnum))
+                dj = np.flip(get_bin_digits(j, qnum))
+
+                ql = di[index]
+                qr = dj[index]
+
+                di_new = np.delete(di, index)
+                dj_new = np.delete(dj, index)
+                i_new = from_bin_digits(np.flip(di_new))
+                j_new = from_bin_digits(np.flip(dj_new))
+
+                if ql == 0 and qr == 0:
+                    mat_00[i_new, j_new] = self.operator[i, j]
+                if ql == 0 and qr == 1:
+                    mat_01[i_new, j_new] = self.operator[i, j]
+                if ql == 1 and qr == 0:
+                    mat_10[i_new, j_new] = self.operator[i, j]
+                if ql == 1 and qr == 1:
+                    mat_11[i_new, j_new] = self.operator[i, j]
+
+        operator = None
+        if basis == 'z':
+            if target == 0:
+                operator = mat_00
+            else:
+                operator = mat_11
+        else:
+            if target == 0:
+                mat_pp = (mat_00 + mat_01 + mat_10 + mat_11) / 2
+                operator = mat_pp
+            else:
+                mat_nn = (mat_00 - mat_01 - mat_10 + mat_11) / 2
+                operator = mat_nn
+
+        return QOperator(qubits_new, operator)
 
 
 # multiply 2 QOperators, often needs to broadcast them

@@ -132,3 +132,116 @@ def stablizer_measurement(err_model: ErrorModel, stringent = True, stringent_plu
     ρ1 = make_bell(err_model, stringent, stringent_plus)
     ρ2 = make_bell(err_model, stringent, stringent_plus)
     ρ2 = ρ2.alter_qubits([6, 9])
+
+
+
+'''
+|0>x|0>z + |1>x|1>z
+'''
+def BBPSSW_bell_pair(qubits, p_n = 0):
+    ρ_0 = np.array([
+        [1, 1, 1, -1],
+        [1, 1, 1, -1],
+        [1, 1, 1, -1],
+        [-1, -1, -1, 1]], dtype=np.float64) / 4
+    mat = (1 - 4 / 3 * p_n) * ρ_0 + (p_n / 3) * np.identity(4)
+    return DensityOperator(qubits, mat)
+
+
+    
+'''
+BBPSSW protocol in 1996, Bennett et al.
+q2    ------∎--X--M(z)
+q1    ---∎--|--⊥------
+         |  |          
+q4    ---|--∎--⊤--M(x)
+q3    ---∎-----X------
+'''
+def BBPSSW(err_model: ErrorModel, detail = False):
+    # ρ1 = bell_pair(err_model.p_n, [1, 3])
+    # ρ2 = bell_pair(err_model.p_n, [2, 4])
+    ρ1 = BBPSSW_bell_pair([1, 3], err_model.p_n)
+    ρ2 = BBPSSW_bell_pair([2, 4], err_model.p_n)
+    if detail:
+        ρ1.print()
+
+    ρ1.merge(ρ2)
+    ρ1.broadcast_with_self([1, 3, 2, 4])
+    if detail:
+        ρ1.print()
+
+    c1 = cnot([1, 2])
+    # c1 = cnot([2, 1])
+    c2 = cnot([4, 3])
+
+    c2 = multiply(c1, c2)
+    # c2.broadcast_with([1, 3, 2, 4]).print()
+
+    # ρ1.evolution(c1, err_model.p_g)
+    ρ1.evolution(c2, err_model.p_g)
+    ρ1.broadcast_with_self([1, 3, 2, 4])
+
+
+    if detail:
+        ρ1.print()
+
+    # ρ1.bell_measure(2, 4, 'z')
+    probs = ρ1.operator.trace()
+    if detail:
+        print("probs", probs)
+    ρ1.bell_measure(2, 4, 'z', 'x')
+    # ρ1 = ρ1.partial_trace([2, 4])
+    probs = ρ1.operator.trace()
+    ρ1.scale(1 / probs)
+
+    if detail:
+        print("probs", probs)
+        ρ1.print()
+
+    return ρ1
+
+'''
+this circuit does nothing.
+q2    ------∎--⊤--M(z)
+q1    ---∎--|--X------
+         |  |          
+q4    ---|--∎--⊤--M(z)
+q3    ---∎-----X------
+'''
+def BBPSSW_2(err_model: ErrorModel, detail = False):
+    ρ1 = bell_pair(err_model.p_n, [1, 3])
+    ρ2 = bell_pair(err_model.p_n, [2, 4])
+    if detail:
+        ρ1.print()
+
+    ρ1.merge(ρ2)
+    ρ1.broadcast_with_self([1, 3, 2, 4])
+    if detail:
+        ρ1.print()
+
+    # c1 = cnot([1, 2])
+    c1 = cnot([2, 1])
+    c2 = cnot([4, 3])
+
+    c2 = multiply(c1, c2)
+    c2.broadcast_with([1, 3, 2, 4]).print()
+
+    # ρ1.evolution(c1, err_model.p_g)
+    ρ1.evolution(c2, err_model.p_g)
+    ρ1.broadcast_with_self([1, 3, 2, 4])
+
+
+    if detail:
+        ρ1.print()
+
+    # ρ1.bell_measure(2, 4, 'z')
+    ρ1.bell_measure(2, 4, 'z', 'z')
+    # ρ1 = ρ1.partial_trace([2, 4])
+    probs = ρ1.operator.trace()
+    ρ1.scale(1 / probs)
+
+    if detail:
+        print("probs", probs)
+        ρ1.print()
+
+    return ρ1
