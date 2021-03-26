@@ -27,7 +27,7 @@ class QChannel(object):
 depolarizing channel for $n$ qubits
 
 $$
-ε(ρ) = (1 - p)ρ + \\frac{ρ}{4^n - 1} \sum (⊗ A_i) ρ (⊗ A_i^\dagger)
+ε(ρ) = (1 - p)ρ + \\frac{ρ}{4^n - 1} \\sum (⊗ A_i) ρ (⊗ A_i^\\dagger)
 $$
 '''
 def depolarizing_channel(p, qubits = [0]) -> QChannel:

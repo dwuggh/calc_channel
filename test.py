@@ -1,3 +1,4 @@
+from calc_channel.purify_circuits import BBPSSW_2
 from calc_channel.QOperator import multiply
 import calc_channel as cc
 import numpy as np
@@ -34,8 +35,6 @@ def test_2():
     z = cc.pauli_z(0)
 
     a = x.broadcast_with([1, 0])
-    # x.print()
-    # z.print()
     a = cc.multiply(x, z)
     a.print()
     a = a.broadcast_with([0, 1])
@@ -125,5 +124,5 @@ if __name__ == '__main__':
                         )
     # test_BBPSSW(0.1)
     a = cc.bell_pair(0)
-    test_BBPSSW(0.1)
+    test_BBPSSW_2(0.1)
     # test_BBPSSW_2(0.1)
