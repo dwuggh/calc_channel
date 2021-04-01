@@ -91,6 +91,8 @@ class DensityOperator(QOperator):
         ρ_10 = multiply(self, P_10).partial_trace([q1, q2])
         ρ_11 = multiply(self, P_11).partial_trace([q1, q2])
 
+        print()
+
 
         p_00 = ρ_00.operator.trace()
         p_01 = ρ_01.operator.trace()

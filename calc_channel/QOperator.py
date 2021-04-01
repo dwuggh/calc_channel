@@ -14,9 +14,6 @@ class QOperator(object):
     def qnum(self):
         return self.qubits.size
 
-    def qmax(self):
-        return np.max(self.qubits) + 1
-
     def dim(self):
         # the following should be equivalent:
         # return 2 ** self.qubits.size
@@ -37,31 +34,6 @@ class QOperator(object):
         operator = self.operator * scalar
         return QOperator(self.qubits, operator)
 
-    '''
-    construct gate in the big hilbert space
-    G = I ⊗ G
-    '''
-    def broadcast(self, qnum: int):
-        dim = 2 ** qnum
-        big_operator = np.zeros((dim, dim), dtype=np.float64)
-        for i in range(dim):
-            for j in range(dim):
-                di = np.flip(get_bin_digits(i, qnum))
-                dj = np.flip(get_bin_digits(j, qnum))
-
-                # coordinates in the small Hilbert space
-                gi = from_bin_digits(np.flip(di[self.qubits]))
-                gj = from_bin_digits(np.flip(dj[self.qubits]))
-
-                # check for identity
-                id = 1
-                for k in range(len(di)):
-                    if id == 1 and not contains(self.qubits, k) and di[k] != dj[k]:
-                        id = 0
-
-                val = np.float64(id) * self.operator[gi, gj]
-                big_operator[i, j] = val
-        return big_operator
 
     '''
     construct gate in the big hilbert space, with given qubits indices
@@ -111,7 +83,7 @@ class QOperator(object):
         dim = self.dim()
         qnum = self.qnum()
 
-        qubits_reserved = np.fromiter((x for x in self.qubits if not contains(traced_qubits, x)), np.int32)
+        qubits_reserved = np.fromiter(filter(lambda x: not contains(traced_qubits, x), self.qubits), np.int32)
 
         dim_new = 2 ** len(qubits_reserved)
 

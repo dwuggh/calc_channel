@@ -17,7 +17,6 @@ class QChannel(object):
                     self.qubits.append(q)
         self.qubits = np.array(self.qubits, dtype=np.int32)
 
-        self.qmax = np.max(self.qubits) + 1
         # broadcast every operator
         # for op in self.kraus_operators:
         #     op = op.broadcast(qnum)
@@ -44,7 +43,7 @@ def depolarizing_channel(p, qubits = [0]) -> QChannel:
             continue
         indices = np.flip(get_n_digits(i, 4, qnum))
         # qi: a tuple, (q, i)
-        ps = map(lambda qi: pauli(qi[1], qi[0]), list(enumerate(indices)))
+        ps = map(lambda qi: pauli(qi[1], qubits[qi[0]]), list(enumerate(indices)))
         op = reduce(multiply, ps)
         op.operator *= np.sqrt(p / (4 ** qnum - 1))
         operators.append(op)
