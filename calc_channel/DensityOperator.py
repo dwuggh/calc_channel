@@ -68,13 +68,53 @@ class DensityOperator(QOperator):
         self.qubits = result.qubits
         return result
 
+
+    '''
+    In the paper, measurement error is modeled by perfect measurement preceded by
+    inversion of the state with probability $p_m$.
+    '''
+    def pre_measure_noise(self, q, pauli, p_m = 0):
+        # construct state inversion channel:
+        op1 = pauli_0(q)
+        op1.operator *= np.sqrt(1 - p_m) 
+        op2 = pauli_z(q) if pauli == 'x' else pauli_x(q)
+        op2.operator *= np.sqrt(p_m)
+        pre_channel = QChannel([op1, op2])
+        self.channel(pre_channel)
+        
+    def bell_measure(self, q1, q2, pauli1, pauli2, p_m = 0, normal_probs = True):
+        self.pre_measure_noise(q1, pauli1, p_m)
+        self.pre_measure_noise(q2, pauli2, p_m)
+
+        channel1 = measure_x(q1) if pauli1 == 'x' else measure_z(q1)
+        channel2 = measure_x(q2) if pauli2 == 'x' else measure_z(q2)
+
+        # the 4 projection operator
+        P_00 = multiply(channel1.kraus_operators[0], channel2.kraus_operators[0])
+        P_11 = multiply(channel1.kraus_operators[1], channel2.kraus_operators[1])
+        
+        # the 4 result density matrix, with weight of p_ij
+        # ρ_00 = multiply(self, P_00).partial_trace([q1, q2])
+        # ρ_11 = multiply(self, P_11).partial_trace([q1, q2])
+        ρ_00 = multiply(P_00, multiply(self, P_00)).partial_trace([q1, q2])
+        ρ_11 = multiply(P_11, multiply(self, P_11)).partial_trace([q1, q2])
+
+        p_00 = ρ_00.operator.trace()
+        p_11 = ρ_11.operator.trace()
+        p_sum = p_00 + p_11
+
+        operator = ρ_00.operator + ρ_11.operator
+        operator /= p_sum
+
+        self.operator = operator
+        self.qubits = ρ_00.qubits
             
     '''
     In the paper, measurement error is modeled by perfect measurement preceded by
     inversion of the state with probability $p_m$.
     NOTE this function may cause porbability loss.
     '''
-    def bell_measure(self, q1, q2, pauli1, pauli2, p_m = 0, normal_probs = True):
+    def bell_measure_2(self, q1, q2, pauli1, pauli2, p_m = 0, normal_probs = True):
         channel1 = measure_x(q1) if pauli1 == 'x' else measure_z(q1)
         channel2 = measure_x(q2) if pauli2 == 'x' else measure_z(q2)
 
@@ -83,16 +123,17 @@ class DensityOperator(QOperator):
         P_01 = multiply(channel1.kraus_operators[0], channel2.kraus_operators[1])
         P_10 = multiply(channel1.kraus_operators[1], channel2.kraus_operators[0])
         P_11 = multiply(channel1.kraus_operators[1], channel2.kraus_operators[1])
-        # P_00.print()
 
         # the 4 result density matrix, with weight of p_ij
-        ρ_00 = multiply(self, P_00).partial_trace([q1, q2])
-        ρ_01 = multiply(self, P_01).partial_trace([q1, q2])
-        ρ_10 = multiply(self, P_10).partial_trace([q1, q2])
-        ρ_11 = multiply(self, P_11).partial_trace([q1, q2])
+        # ρ_00 = multiply(self, P_00).partial_trace([q1, q2])
+        # ρ_01 = multiply(self, P_01).partial_trace([q1, q2])
+        # ρ_10 = multiply(self, P_10).partial_trace([q1, q2])
+        # ρ_11 = multiply(self, P_11).partial_trace([q1, q2])
 
-        print()
-
+        ρ_00 = multiply(P_00, multiply(self, P_00)).partial_trace([q1, q2])
+        ρ_01 = multiply(P_01, multiply(self, P_01)).partial_trace([q1, q2])
+        ρ_10 = multiply(P_10, multiply(self, P_10)).partial_trace([q1, q2])
+        ρ_11 = multiply(P_11, multiply(self, P_11)).partial_trace([q1, q2])
 
         p_00 = ρ_00.operator.trace()
         p_01 = ρ_01.operator.trace()
@@ -112,17 +153,14 @@ class DensityOperator(QOperator):
         p10 = f(p10, p_10)
         p11 = f(p11, p_11)
 
-        # no rescaling: this is intentional
         if normal_probs:
             p00 = p00 / p_sum
             p01 = p01 / p_sum
             p10 = p10 / p_sum
             p11 = p11 / p_sum
 
-        # print(p_00, p_01, p_10, p_11)
-        # print(p00 , p01 , p10 , p11)
 
-        operator = ρ_00.operator * p00 + ρ_01.operator * p10 + ρ_10.operator * p10 +ρ_11.operator * p11
+        operator = ρ_00.operator * p00 + ρ_01.operator * p01 + ρ_10.operator * p10 +ρ_11.operator * p11
 
         self.operator = operator
         self.qubits = ρ_00.qubits
