@@ -19,11 +19,6 @@ class DensityOperator(QOperator):
 
         super().__init__(qubits, mat)
 
-    # def print(self):
-    #     print("qubits: ", self.qubits)
-    #     print("shape:  ", self.operator.shape)
-    #     print(self.operator)
-
     def deepcopy(self):
         operator = self.operator
         qubits = self.qubits

@@ -6,6 +6,14 @@ class QOperator(object):
         self.qubits = np.array(qubits)
         self.operator = np.array(operator, dtype=np.float64)
 
+    # def __mul__(self, other):
+    #     op = self.operator * other
+    #     return QOperator(self.qubits, op)
+
+    # def __rmul__(self, rhs):
+    #     self.__mul__(rhs)
+    #     return self
+
     def deepcopy(self):
         operator = self.operator
         qubits = self.qubits

@@ -40,6 +40,7 @@ def bell_purify_1(ρ: DensityOperator, err_model: ErrorModel, data1, data2, q1, 
 
     ρ.evolution(c1, err_model.p_g)
     ρ.evolution(c2, err_model.p_g)
+    # print("evolution")
     # ρ.print()
 
     ρ2 = bell_pair(err_model.p_n, [q2, q4])
@@ -92,9 +93,13 @@ def bell_purify_2(ρ: DensityOperator, err_model: ErrorModel, data1, data2, q1, 
     c1 = cnot([q2, q1])
     c2 = cnot([q4, q3])
     ρ1.evolution(c1, err_model.p_g)
+
     ρ1.evolution(c2, err_model.p_g)
 
     ρ1.bell_measure(q2, q4, 'x', 'x', err_model.p_m)
+
+    # if debug:
+    #     ρ1.print()
 
     ρ3 = bell_pair(err_model.p_n, [q2, q4])
     ρ1.merge(ρ3)
@@ -105,9 +110,6 @@ def bell_purify_2(ρ: DensityOperator, err_model: ErrorModel, data1, data2, q1, 
     ρ1.evolution(c4, err_model.p_g)
 
     ρ1.bell_measure(q2, q4, 'x', 'x', err_model.p_m)
-
-    if debug:
-        ρ1.print()
 
     # now, take ρ into consideration
     ρ.merge(ρ1)
@@ -129,6 +131,8 @@ def bell_purify_2(ρ: DensityOperator, err_model: ErrorModel, data1, data2, q1, 
         ρ.bell_measure(q2, q4, 'x', 'x', err_model.p_m)
 
     ρ.bell_measure(q1, q3, 'x', 'x', err_model.p_m)
+
+
 
 '''
 qubit indexing:
@@ -199,8 +203,8 @@ def make_GHZ_with(ρ1: DensityOperator, err_model: ErrorModel, stringent = True,
     # then the result density matrix would consist of 5 qubits of indices 0, 1, 3, 6, 9.
     # However, if the ancilla indices are 1 2 7 8, everything works fine, at least seemingly.
     # Don't know why, not even a clue.
-    # bell_purify_2(ρ1, err_model, 3, 9, 4, 5, 10, 11, 'z', stringent)
-    bell_purify_2(ρ1, err_model, 3, 9, 1, 2, 7, 8, 'z', stringent)
+    bell_purify_2(ρ1, err_model, 3, 9, 4, 5, 10, 11, 'z', stringent)
+    # bell_purify_2(ρ1, err_model, 3, 9, 1, 2, 7, 8, 'z', stringent)
     return ρ1
 
 
@@ -295,14 +299,11 @@ def BBPSSW_2(err_model: ErrorModel, detail = False):
     if detail:
         ρ1.print()
 
-    # c1 = cnot([1, 2])
     c1 = cnot([2, 1])
     c2 = cnot([4, 3])
 
     c2 = multiply(c1, c2)
-    c2.broadcast_with([1, 3, 2, 4]).print()
 
-    # ρ1.evolution(c1, err_model.p_g)
     ρ1.evolution(c2, err_model.p_g)
     ρ1.broadcast_with_self([1, 3, 2, 4])
 
