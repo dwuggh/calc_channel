@@ -1,5 +1,4 @@
 import numpy as np
-from copy import deepcopy
 from functools import reduce
 from .utils import *
 from .QOperator import *
@@ -32,7 +31,6 @@ data2 ------σ------------
 def bell_purify_1(ρ: DensityOperator, err_model: ErrorModel, data1, data2, q1, q2, q3 ,q4, pauli):
     ρ1 = bell_pair(err_model.p_n, [q1, q3])
     ρ.merge(ρ1)
-    # ρ.print()
 
     # 2 control-pauli gate
     c1 = cpauli(pauli, [q1, data1])
@@ -40,8 +38,6 @@ def bell_purify_1(ρ: DensityOperator, err_model: ErrorModel, data1, data2, q1, 
 
     ρ.evolution(c1, err_model.p_g)
     ρ.evolution(c2, err_model.p_g)
-    # print("evolution")
-    # ρ.print()
 
     ρ2 = bell_pair(err_model.p_n, [q2, q4])
     ρ.merge(ρ2)
@@ -51,6 +47,8 @@ def bell_purify_1(ρ: DensityOperator, err_model: ErrorModel, data1, data2, q1, 
 
     ρ.evolution(c3, err_model.p_g)
     ρ.evolution(c4, err_model.p_g)
+
+    # ρ.print()
 
     # measurement
     ρ.bell_measure(q1, q3, 'x', 'x', err_model.p_m, True)
@@ -84,16 +82,15 @@ def bell_purify_2(ρ: DensityOperator, err_model: ErrorModel, data1, data2, q1, 
 
     # for efficiency improvement
     ρ1 = bell_pair(err_model.p_n, [q1, q3])
-    # ρ2 = bell_pair(err_model.p_n, [q2, q4])
-    ρ2 = ρ1.deepcopy()
-    ρ2.alter_qubits([q2, q4])
+    ρ2 = bell_pair(err_model.p_n, [q2, q4])
+    # ρ2 = ρ1.deepcopy()
+    # ρ2.alter_qubits([q2, q4])
 
     ρ1.merge(ρ2)
 
     c1 = cnot([q2, q1])
     c2 = cnot([q4, q3])
     ρ1.evolution(c1, err_model.p_g)
-
     ρ1.evolution(c2, err_model.p_g)
 
     ρ1.bell_measure(q2, q4, 'x', 'x', err_model.p_m)
@@ -141,7 +138,10 @@ qubit indexing:
 0  3
 '''
 def make_bell(err_model: ErrorModel, stringent = True, stringent_plus = True, step = False):
-    ρ = bell_pair(err_model.p_n, [0, 3])
+    return make_bell_with(bell_pair(err_model.p_n, [0, 3]), err_model, stringent, stringent_plus)
+
+def make_bell_with(ρ: DensityOperator, err_model: ErrorModel, stringent = True, stringent_plus = True, step = False):
+    ρ.alter_qubits([0, 3])
     bell_purify_1(ρ, err_model, 0, 3, 1, 2, 4, 5, 'z')
     if step:
         print(bell_fidelity(ρ))
@@ -194,15 +194,13 @@ def make_GHZ(err_model: ErrorModel, stringent = True, stringent_plus = True):
 def make_GHZ_with(ρ1: DensityOperator, err_model: ErrorModel, stringent = True, stringent_plus = True):
     # ρ1 = make_bell(err_model, stringent, stringent_plus)
     # ρ2 = make_bell(err_model, stringent, stringent_plus)
-    ρ2= ρ1.deepcopy()
+    ρ2 = ρ1.deepcopy()
     ρ1.alter_qubits([0, 3])
     ρ2.alter_qubits([6, 9])
     ρ1.merge(ρ2)
     bell_purify_2(ρ1, err_model, 0, 6, 1, 2, 7, 8, 'z', stringent)
-    # FIXME qubits mismatch for the next line, if we choose ancillas' indices to be 4 5 10 11,
-    # then the result density matrix would consist of 5 qubits of indices 0, 1, 3, 6, 9.
-    # However, if the ancilla indices are 1 2 7 8, everything works fine, at least seemingly.
-    # Don't know why, not even a clue.
+    bell_purify_2(ρ1, err_model, 0, 6, 1, 2, 7, 8, 'z', stringent)
+    bell_purify_2(ρ1, err_model, 3, 9, 4, 5, 10, 11, 'z', stringent)
     bell_purify_2(ρ1, err_model, 3, 9, 4, 5, 10, 11, 'z', stringent)
     # bell_purify_2(ρ1, err_model, 3, 9, 1, 2, 7, 8, 'z', stringent)
     return ρ1

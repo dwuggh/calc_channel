@@ -20,8 +20,8 @@ class DensityOperator(QOperator):
         super().__init__(qubits, mat)
 
     def deepcopy(self):
-        operator = self.operator
-        qubits = self.qubits
+        operator = self.operator.copy()
+        qubits = self.qubits.copy()
         return DensityOperator(qubits, operator)
 
     def merge(self, other):
@@ -189,4 +189,10 @@ def bell_pair(p_n, qubits = [0, 1], i = 0):
         [-1, 0, 0, 1]], dtype=np.float64) / 2
     ρ_0 =  ρ_00 if i == 0 else ρ_11
     mat = (1 - 4 / 3 * p_n) * ρ_0 + (p_n / 3) * np.identity(4)
+    # mat = np.array([
+    #     [0.44976515, 0,          0,          0.41063044],
+    #     [0,          0.05022543, 0.0085779,  0],         
+    #     [0,          0.085779,   0.05022543, 0],         
+    #     [0.41063044, 0,          0,          0.44976515],
+    #     ])
     return DensityOperator(qubits, mat)

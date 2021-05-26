@@ -1,4 +1,5 @@
-from calc_channel.purify_circuits import BBPSSW_2
+from calc_channel.DensityOperator import bell_pair
+from calc_channel.purify_circuits import BBPSSW_2, bell_purify_2
 from calc_channel.QOperator import multiply
 import calc_channel as cc
 import numpy as np
@@ -122,7 +123,7 @@ if __name__ == '__main__':
     np.set_printoptions(edgeitems=16, linewidth=200,
                         formatter=dict(float=lambda x: "%8.4g" % x)
                         )
-    # test_BBPSSW(0.1)
-    a = cc.bell_pair(0)
-    test_BBPSSW_2(0.1)
-    # test_BBPSSW_2(0.1)
+    err_model = cc.ErrorModel(0.1, 0.006, 0.006)
+    ρ = cc.bell_pair(err_model.p_n, [0, 3])
+    cc.bell_purify_1(ρ, err_model, 0, 3, 1, 2, 4, 5, 'z')
+    ρ.print()

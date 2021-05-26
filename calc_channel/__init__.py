@@ -4,6 +4,7 @@ from .QChannel import *
 from .DensityOperator import *
 from .fidelity import *
 from .purify_circuits import *
+from .measure import *
 
 
 # from os.path import dirname, basename, isfile

@@ -15,8 +15,8 @@ class QOperator(object):
     #     return self
 
     def deepcopy(self):
-        operator = self.operator
-        qubits = self.qubits
+        operator = self.operator.copy()
+        qubits = self.qubits.copy()
         return QOperator(qubits, operator)
 
     def qnum(self):
