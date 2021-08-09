@@ -140,6 +140,10 @@ qubit indexing:
 def make_bell(err_model: ErrorModel, stringent = True, stringent_plus = True, step = False):
     return make_bell_with(bell_pair(err_model.p_n, [0, 3]), err_model, stringent, stringent_plus)
 
+def make_bell_with_initial(ρ: np.ndarray, err_model: ErrorModel, stringent = True, stringent_plus = True, step = False):
+    ρ = DensityOperator([0, 3], ρ) 
+    return make_bell_with(ρ, err_model, stringent, stringent_plus)
+
 def make_bell_with(ρ: DensityOperator, err_model: ErrorModel, stringent = True, stringent_plus = True, step = False):
     ρ.alter_qubits([0, 3])
     bell_purify_1(ρ, err_model, 0, 3, 1, 2, 4, 5, 'z')
