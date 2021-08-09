@@ -14,8 +14,8 @@ def write_coeffs(name, correct, error):
         for coeff in error:
             f.write("%.8f " % coeff)
 
-def ph_expedient(p_ph, p_local, name):
-    bell_operator = get_bell_pair(p_ph)
+def ph_expedient(p_ph, kappa, p_local, name):
+    bell_operator = get_bell_pair(p_ph, kappa)
     # the below 0.0 is actually neglected in computing
     bell_constructor = lambda: bell_operator
     err_model = cc.ErrorModel(bell_constructor, p_local, p_local)
@@ -30,7 +30,13 @@ def ph_expedient(p_ph, p_local, name):
 def run(p_local, p_ph):
     name = "bosonic_channels/" + str(p_ph) + '_' + str(p_local)
     print("running " + name + " ...")
-    ph_expedient(p_ph, p_local, name)
+    ph_expedient(p_ph, 0.1, p_local, name)
+    print("finished " + name)
+
+def run(p_local, p_ph, kappa):
+    name = "bosonic_channels/" + str(kappa) + str(p_ph) + '_' + str(p_local)
+    print("running " + name + " ...")
+    ph_expedient(p_ph, kappa, p_local, name)
     print("finished " + name)
 
 if __name__ == '__main__':
@@ -38,9 +44,10 @@ if __name__ == '__main__':
     argv = sys.argv
     p_local = float(argv[1])
     p_ph = float(argv[2])
+    kappa = float(argv[3])
     # p_local = 0.003
     # ph_expedient(p_ph, p_local, 'test')
-    run(p_ph, p_local)
+    run_kappa(p_local, p_ph, kappa)
     # for p_ph in np.arange(0.005, 0.015, 0.001):
     #     pass
 
