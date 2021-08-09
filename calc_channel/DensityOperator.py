@@ -1,4 +1,5 @@
 import numpy as np
+import traceback
 from functools import reduce
 from .utils import *
 from .QOperator import *
@@ -177,6 +178,11 @@ def measure_z(q = 0):
 
 # generate bell pair in werner form
 def bell_pair(p_n, qubits = [0, 1], i = 0):
+    if callable(p_n):
+        return DensityOperator(qubits, p_n())
+
+    print('using normal bell pair generation... pn = {}'.format(p_n))
+    # traceback.print_stack()
     ρ_00 = np.array([
         [1, 0, 0, 1],
         [0, 0, 0, 0],
